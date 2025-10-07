@@ -62,7 +62,7 @@ const Index = () => {
     }
     
     const data = await response.json();
-    return data.text;
+    return data.response;
   };
 
   const currentChat = getActiveChat();
