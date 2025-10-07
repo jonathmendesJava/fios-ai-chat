@@ -46,25 +46,22 @@ const Index = () => {
     }
   };
 
-  // Temporary simulation function - replace with actual n8n integration
   const simulateAIResponse = async (chatId: string, message: string): Promise<string> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await fetch('https://api-n8n.fios.net.br/webhook/330d0161-65a4-4e78-b977-739773d812cc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chatId: chatId,
+        message: message,
+        category: getActiveChat()?.category
+      })
+    });
     
-    // This is where you'll integrate with n8n
-    // Example structure:
-    // const response = await fetch('YOUR_N8N_WEBHOOK_URL', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     chatId: chatId,
-    //     message: message,
-    //     category: getActiveChat()?.category
-    //   })
-    // });
-    // return await response.text();
+    if (!response.ok) {
+      throw new Error('Falha na comunicação com o servidor');
+    }
     
-    return `Recebi sua mensagem: "${message}". Esta é uma resposta simulada. Configure o webhook do n8n para respostas reais.`;
+    return await response.text();
   };
 
   const currentChat = getActiveChat();
