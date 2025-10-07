@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { ChevronDown, MessageSquare, Plus, Wrench, DollarSign, Briefcase, Server } from 'lucide-react';
+import { ChevronDown, MessageSquare, Plus, Wrench, DollarSign, Briefcase, Server, Trash2, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import type { Chat, ChatCategory } from '@/types/chat';
+import { DeleteChatDialog } from './DeleteChatDialog';
+import { RenameChatDialog } from './RenameChatDialog';
 
 interface ChatSidebarProps {
   chats: Chat[];
   activeChat: string | null;
   onChatSelect: (chatId: string) => void;
   onNewChat: (category: ChatCategory) => void;
+  onDeleteChat: (chatId: string) => void;
+  onRenameChat: (chatId: string, newTitle: string) => void;
 }
 
 const categories = [
@@ -19,10 +23,13 @@ const categories = [
   { id: 'infra' as ChatCategory, label: 'Infra', icon: Server },
 ];
 
-export function ChatSidebar({ chats, activeChat, onChatSelect, onNewChat }: ChatSidebarProps) {
+export function ChatSidebar({ chats, activeChat, onChatSelect, onNewChat, onDeleteChat, onRenameChat }: ChatSidebarProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<ChatCategory>>(
     new Set(categories.map(c => c.id))
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
 
   const toggleCategory = (categoryId: ChatCategory) => {
     setExpandedCategories(prev => {
@@ -38,6 +45,32 @@ export function ChatSidebar({ chats, activeChat, onChatSelect, onNewChat }: Chat
 
   const getCategoryChats = (categoryId: ChatCategory) => {
     return chats.filter(chat => chat.category === categoryId);
+  };
+
+  const handleDeleteClick = (chat: Chat, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedChat(chat);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleRenameClick = (chat: Chat, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedChat(chat);
+    setRenameDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedChat) {
+      onDeleteChat(selectedChat.id);
+      setSelectedChat(null);
+    }
+  };
+
+  const confirmRename = (newTitle: string) => {
+    if (selectedChat) {
+      onRenameChat(selectedChat.id, newTitle);
+      setSelectedChat(null);
+    }
   };
 
   return (
@@ -89,18 +122,37 @@ export function ChatSidebar({ chats, activeChat, onChatSelect, onNewChat }: Chat
                 {isExpanded && categoryChats.length > 0 && (
                   <div className="ml-6 mt-1 space-y-1">
                     {categoryChats.map(chat => (
-                      <Button
-                        key={chat.id}
-                        variant="ghost"
-                        className={cn(
-                          'w-full justify-start text-sm text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent',
-                          activeChat === chat.id && 'bg-sidebar-accent text-sidebar-accent-foreground'
-                        )}
-                        onClick={() => onChatSelect(chat.id)}
-                      >
-                        <MessageSquare className="w-3 h-3 mr-2" />
-                        <span className="truncate">{chat.title}</span>
-                      </Button>
+                      <div key={chat.id} className="group relative flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            'flex-1 justify-start text-sm text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent transition-all duration-200',
+                            activeChat === chat.id && 'bg-sidebar-accent text-sidebar-accent-foreground'
+                          )}
+                          onClick={() => onChatSelect(chat.id)}
+                        >
+                          <MessageSquare className="w-3 h-3 mr-2 flex-shrink-0" />
+                          <span className="truncate flex-1 text-left">{chat.title}</span>
+                        </Button>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
+                            onClick={(e) => handleRenameClick(chat, e)}
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => handleDeleteClick(chat, e)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -115,6 +167,23 @@ export function ChatSidebar({ chats, activeChat, onChatSelect, onNewChat }: Chat
           })}
         </div>
       </ScrollArea>
+
+      {selectedChat && (
+        <>
+          <DeleteChatDialog
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            onConfirm={confirmDelete}
+            chatTitle={selectedChat.title}
+          />
+          <RenameChatDialog
+            open={renameDialogOpen}
+            onOpenChange={setRenameDialogOpen}
+            onConfirm={confirmRename}
+            currentTitle={selectedChat.title}
+          />
+        </>
+      )}
     </div>
   );
 }

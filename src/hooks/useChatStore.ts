@@ -80,6 +80,19 @@ export function useChatStore() {
     return chats.find(chat => chat.id === activeChat) || null;
   };
 
+  const deleteChat = (chatId: string) => {
+    setChats(prev => prev.filter(chat => chat.id !== chatId));
+    if (activeChat === chatId) {
+      setActiveChat(null);
+    }
+  };
+
+  const renameChat = (chatId: string, newTitle: string) => {
+    setChats(prev => prev.map(chat => 
+      chat.id === chatId ? { ...chat, title: newTitle } : chat
+    ));
+  };
+
   return {
     chats,
     activeChat,
@@ -87,5 +100,7 @@ export function useChatStore() {
     createChat,
     addMessage,
     getActiveChat,
+    deleteChat,
+    renameChat,
   };
 }

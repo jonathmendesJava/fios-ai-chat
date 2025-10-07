@@ -8,7 +8,7 @@ import type { ChatCategory } from '@/types/chat';
 import { WEBHOOK_CONFIGS, CATEGORY_NAMES } from '@/config/webhooks';
 
 const Index = () => {
-  const { chats, activeChat, setActiveChat, createChat, addMessage, getActiveChat } = useChatStore();
+  const { chats, activeChat, setActiveChat, createChat, addMessage, getActiveChat, deleteChat, renameChat } = useChatStore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -59,6 +59,8 @@ const Index = () => {
     
     // Se webhook não está habilitado, retorna mensagem de desenvolvimento
     if (!webhookConfig.enabled) {
+      // Simulate delay for typing indicator
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return `🚧 O atendimento de ${CATEGORY_NAMES[category]} está em desenvolvimento. Em breve você poderá conversar com nossa IA especializada. Por enquanto, utilize o chat Financeiro. Obrigado pela compreensão!`;
     }
     
@@ -91,13 +93,15 @@ const Index = () => {
           activeChat={activeChat}
           onChatSelect={setActiveChat}
           onNewChat={handleNewChat}
+          onDeleteChat={deleteChat}
+          onRenameChat={renameChat}
         />
       </aside>
 
       <main className="flex-1 flex flex-col">
         {currentChat ? (
           <>
-            <ChatArea messages={currentChat.messages} />
+            <ChatArea messages={currentChat.messages} isLoading={isLoading} />
             <ChatInput
               onSendMessage={handleSendMessage}
               disabled={!activeChat}
