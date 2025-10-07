@@ -6,6 +6,8 @@ const STORAGE_KEY = 'fios-chats';
 export function useChatStore() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<string | null>(null);
+  
+  // Chat management functions
 
   // Load chats from localStorage
   useEffect(() => {
