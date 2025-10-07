@@ -57,6 +57,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        message: {
+          user: "hsl(var(--message-user))",
+          "user-foreground": "hsl(var(--message-user-foreground))",
+          ai: "hsl(var(--message-ai))",
+          "ai-foreground": "hsl(var(--message-ai-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
