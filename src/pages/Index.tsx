@@ -61,7 +61,8 @@ const Index = () => {
       throw new Error('Falha na comunicação com o servidor');
     }
     
-    return await response.text();
+    const data = await response.json();
+    return data.text;
   };
 
   const currentChat = getActiveChat();
