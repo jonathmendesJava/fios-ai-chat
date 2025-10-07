@@ -5,6 +5,7 @@ import { ChatInput } from '@/components/chat/ChatInput';
 import { useChatStore } from '@/hooks/useChatStore';
 import { useToast } from '@/hooks/use-toast';
 import type { ChatCategory } from '@/types/chat';
+import { WEBHOOK_CONFIGS, CATEGORY_NAMES } from '@/config/webhooks';
 
 const Index = () => {
   const { chats, activeChat, setActiveChat, createChat, addMessage, getActiveChat } = useChatStore();
@@ -47,13 +48,28 @@ const Index = () => {
   };
 
   const simulateAIResponse = async (chatId: string, message: string): Promise<string> => {
-    const response = await fetch('https://api-n8n.fios.net.br/webhook/330d0161-65a4-4e78-b977-739773d812cc', {
+    const currentChat = getActiveChat();
+    const category = currentChat?.category;
+    
+    if (!category) {
+      throw new Error('Categoria não encontrada');
+    }
+    
+    const webhookConfig = WEBHOOK_CONFIGS[category];
+    
+    // Se webhook não está habilitado, retorna mensagem de desenvolvimento
+    if (!webhookConfig.enabled) {
+      return `🚧 O atendimento de ${CATEGORY_NAMES[category]} está em desenvolvimento. Em breve você poderá conversar com nossa IA especializada. Por enquanto, utilize o chat Financeiro. Obrigado pela compreensão!`;
+    }
+    
+    // Faz chamada ao webhook específico da categoria
+    const response = await fetch(webhookConfig.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chatId: chatId,
-        message: message,
-        category: getActiveChat()?.category
+        chatId,
+        message,
+        category
       })
     });
     
