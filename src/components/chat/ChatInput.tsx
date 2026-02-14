@@ -28,27 +28,27 @@ export function ChatInput({ onSendMessage, disabled, isLoading }: ChatInputProps
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-border/50 bg-card/50 backdrop-blur-sm p-4">
-      <div className="max-w-3xl mx-auto flex gap-3">
+    <form onSubmit={handleSubmit} className="border-t border-border/40 bg-card/20 backdrop-blur-sm px-4 py-3">
+      <div className="max-w-3xl mx-auto flex gap-2 items-end">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Digite sua mensagem..."
           disabled={disabled || isLoading}
-          className="resize-none bg-input/50 border-border/50 focus:border-primary/50 min-h-[60px] max-h-[200px] transition-all duration-200"
+          className="resize-none bg-background/60 border-border/40 focus:border-primary/40 min-h-[44px] max-h-[160px] text-sm rounded-xl transition-all duration-200"
           rows={1}
         />
         <Button
           type="submit"
           size="icon"
           disabled={!message.trim() || disabled || isLoading}
-          className="h-[60px] w-[60px] bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-200 hover:scale-105"
+          className="h-[44px] w-[44px] rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm transition-all duration-200 flex-shrink-0"
         >
           {isLoading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Send className="w-5 h-5" />
+            <Send className="w-4 h-4" />
           )}
         </Button>
       </div>
