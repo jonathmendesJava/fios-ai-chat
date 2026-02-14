@@ -8,12 +8,12 @@ import type { ChatCategory } from '@/types/chat';
 import { WEBHOOK_CONFIGS, CATEGORY_NAMES } from '@/config/webhooks';
 
 const Index = () => {
-  const { chats, activeChat, setActiveChat, createChat, addMessage, getActiveChat, deleteChat, renameChat } = useChatStore();
+  const { chats, activeChat, loading, setActiveChat, createChat, addMessage, getActiveChat, deleteChat, renameChat } = useChatStore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleNewChat = (category: ChatCategory) => {
-    createChat(category);
+  const handleNewChat = async (category: ChatCategory) => {
+    await createChat(category);
   };
 
   const handleSendMessage = async (message: string) => {
@@ -26,15 +26,33 @@ const Index = () => {
       return;
     }
 
-    // Add user message
-    addMessage(activeChat, message, 'user');
+    await addMessage(activeChat, message, 'user');
     setIsLoading(true);
 
     try {
-      // TODO: Integrate with n8n webhook
-      // For now, simulate AI response
-      const response = await simulateAIResponse(activeChat, message);
-      addMessage(activeChat, response, 'assistant');
+      const currentChat = getActiveChat();
+      const category = currentChat?.category;
+
+      if (!category) throw new Error('Categoria não encontrada');
+
+      const webhookConfig = WEBHOOK_CONFIGS[category];
+
+      let response: string;
+      if (!webhookConfig.enabled) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        response = `🚧 O atendimento de ${CATEGORY_NAMES[category]} está em desenvolvimento. Em breve você poderá conversar com nossa IA especializada. Por enquanto, utilize o chat Financeiro. Obrigado pela compreensão!`;
+      } else {
+        const res = await fetch(webhookConfig.url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chatId: activeChat, message, category }),
+        });
+        if (!res.ok) throw new Error('Falha na comunicação com o servidor');
+        const data = await res.json();
+        response = data.response;
+      }
+
+      await addMessage(activeChat, response, 'assistant');
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -47,43 +65,15 @@ const Index = () => {
     }
   };
 
-  const simulateAIResponse = async (chatId: string, message: string): Promise<string> => {
-    const currentChat = getActiveChat();
-    const category = currentChat?.category;
-    
-    if (!category) {
-      throw new Error('Categoria não encontrada');
-    }
-    
-    const webhookConfig = WEBHOOK_CONFIGS[category];
-    
-    // Se webhook não está habilitado, retorna mensagem de desenvolvimento
-    if (!webhookConfig.enabled) {
-      // Simulate delay for typing indicator
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return `🚧 O atendimento de ${CATEGORY_NAMES[category]} está em desenvolvimento. Em breve você poderá conversar com nossa IA especializada. Por enquanto, utilize o chat Financeiro. Obrigado pela compreensão!`;
-    }
-    
-    // Faz chamada ao webhook específico da categoria
-    const response = await fetch(webhookConfig.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chatId,
-        message,
-        category
-      })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Falha na comunicação com o servidor');
-    }
-    
-    const data = await response.json();
-    return data.response;
-  };
-
   const currentChat = getActiveChat();
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex bg-background text-foreground">

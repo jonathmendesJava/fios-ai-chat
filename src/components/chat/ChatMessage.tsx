@@ -56,7 +56,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
         <div className="whitespace-pre-wrap break-words">{formatContent(message.content)}</div>
         <div className="flex items-center justify-between mt-2 gap-2">
           <span className="text-xs opacity-60">
-            {new Date(message.timestamp).toLocaleTimeString('pt-BR', {
+            {new Date(message.created_at).toLocaleTimeString('pt-BR', {
               hour: '2-digit',
               minute: '2-digit',
             })}
