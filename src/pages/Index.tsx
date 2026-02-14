@@ -87,7 +87,7 @@ const Index = () => {
       <main className="flex-1 flex flex-col">
         {currentChat ? (
           <>
-            <ChatArea messages={currentChat.messages} isLoading={isLoading} />
+            <ChatArea messages={currentChat.messages} isLoading={isLoading} chatTitle={currentChat.title} />
             <ChatInput onSendMessage={handleSendMessage} disabled={!activeChat} isLoading={isLoading} />
           </>
         ) : (

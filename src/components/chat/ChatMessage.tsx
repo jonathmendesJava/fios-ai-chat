@@ -10,6 +10,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
+  const isUser = message.role === 'user';
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -18,12 +19,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
   };
 
   const formatContent = (content: string) => {
-    // Basic URL detection and linking
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return content.split(urlRegex).map((part, i) => {
       if (part.match(urlRegex)) {
         return (
-          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+          <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
             {part}
           </a>
         );
@@ -35,50 +35,46 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div
       className={cn(
-        'flex gap-3 max-w-3xl group animate-fade-in',
-        message.role === 'user' ? 'ml-auto' : 'mr-auto'
+        'flex gap-2.5 group animate-fade-in',
+        isUser ? 'justify-end' : 'justify-start'
       )}
     >
-      {message.role === 'assistant' && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-primary/90 to-primary flex items-center justify-center shadow-lg shadow-primary/20">
-          <Bot className="w-5 h-5 text-primary-foreground" />
+      {!isUser && (
+        <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center mt-0.5">
+          <Bot className="w-4 h-4 text-primary" />
         </div>
       )}
-      
-      <div
-        className={cn(
-          'rounded-2xl px-4 py-3 backdrop-blur-sm transition-all duration-200 relative',
-          message.role === 'user'
-            ? 'bg-message-user/90 text-message-user-foreground shadow-md hover:shadow-lg hover:-translate-y-0.5'
-            : 'bg-gradient-to-br from-message-ai to-message-ai/80 text-message-ai-foreground shadow-sm hover:shadow-md border border-border/50'
-        )}
-      >
-        <div className="whitespace-pre-wrap break-words">{formatContent(message.content)}</div>
-        <div className="flex items-center justify-between mt-2 gap-2">
-          <span className="text-xs opacity-60">
+
+      <div className={cn('flex flex-col gap-1', isUser ? 'items-end' : 'items-start', 'max-w-[75%]')}>
+        <div
+          className={cn(
+            'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed transition-all duration-150',
+            isUser
+              ? 'bg-primary text-primary-foreground rounded-br-md'
+              : 'bg-card border border-border/60 text-foreground rounded-bl-md'
+          )}
+        >
+          <div className="whitespace-pre-wrap break-words">{formatContent(message.content)}</div>
+        </div>
+        <div className="flex items-center gap-1.5 px-1">
+          <span className="text-[11px] text-muted-foreground/60">
             {new Date(message.created_at).toLocaleTimeString('pt-BR', {
               hour: '2-digit',
               minute: '2-digit',
             })}
           </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+          <button
             onClick={handleCopy}
+            className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/50 hover:text-muted-foreground"
           >
-            {copied ? (
-              <Check className="h-3 w-3" />
-            ) : (
-              <Copy className="h-3 w-3" />
-            )}
-          </Button>
+            {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+          </button>
         </div>
       </div>
 
-      {message.role === 'user' && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-secondary flex items-center justify-center shadow-md">
-          <User className="w-5 h-5 text-foreground" />
+      {isUser && (
+        <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-secondary flex items-center justify-center mt-0.5">
+          <User className="w-4 h-4 text-muted-foreground" />
         </div>
       )}
     </div>
