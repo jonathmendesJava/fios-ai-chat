@@ -21,6 +21,7 @@ export type Database = {
           id: string
           title: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           category: string
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           category?: string
@@ -35,6 +37,7 @@ export type Database = {
           id?: string
           title?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -69,6 +72,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          team: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          team: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          team?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -3,26 +3,25 @@ import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatArea } from '@/components/chat/ChatArea';
 import { ChatInput } from '@/components/chat/ChatInput';
 import { useChatStore } from '@/hooks/useChatStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import type { ChatCategory } from '@/types/chat';
 import { WEBHOOK_CONFIGS, CATEGORY_NAMES } from '@/config/webhooks';
 
 const Index = () => {
-  const { chats, activeChat, loading, setActiveChat, createChat, addMessage, getActiveChat, deleteChat, renameChat } = useChatStore();
+  const { chats, activeChat, loading, userTeam, setActiveChat, createChat, addMessage, getActiveChat, deleteChat, renameChat } = useChatStore();
+  const { signOut, profile } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleNewChat = async (category: ChatCategory) => {
-    await createChat(category);
+  const handleNewChat = async () => {
+    if (!userTeam) return;
+    await createChat(userTeam);
   };
 
   const handleSendMessage = async (message: string) => {
     if (!activeChat) {
-      toast({
-        title: 'Erro',
-        description: 'Selecione ou crie um chat primeiro',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Crie um chat primeiro', variant: 'destructive' });
       return;
     }
 
@@ -32,12 +31,11 @@ const Index = () => {
     try {
       const currentChat = getActiveChat();
       const category = currentChat?.category;
-
       if (!category) throw new Error('Categoria não encontrada');
 
       const webhookConfig = WEBHOOK_CONFIGS[category];
-
       let response: string;
+
       if (!webhookConfig.enabled) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         response = `🚧 O atendimento de ${CATEGORY_NAMES[category]} está em desenvolvimento. Em breve você poderá conversar com nossa IA especializada. Por enquanto, utilize o chat Financeiro. Obrigado pela compreensão!`;
@@ -55,11 +53,7 @@ const Index = () => {
       await addMessage(activeChat, response, 'assistant');
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: 'Erro',
-        description: 'Falha ao enviar mensagem. Tente novamente.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: 'Falha ao enviar mensagem. Tente novamente.', variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
@@ -81,10 +75,12 @@ const Index = () => {
         <ChatSidebar
           chats={chats}
           activeChat={activeChat}
+          userTeam={userTeam}
           onChatSelect={setActiveChat}
           onNewChat={handleNewChat}
           onDeleteChat={deleteChat}
           onRenameChat={renameChat}
+          onSignOut={signOut}
         />
       </aside>
 
@@ -92,18 +88,16 @@ const Index = () => {
         {currentChat ? (
           <>
             <ChatArea messages={currentChat.messages} isLoading={isLoading} />
-            <ChatInput
-              onSendMessage={handleSendMessage}
-              disabled={!activeChat}
-              isLoading={isLoading}
-            />
+            <ChatInput onSendMessage={handleSendMessage} disabled={!activeChat} isLoading={isLoading} />
           </>
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-4 max-w-md">
               <h2 className="text-2xl font-bold text-primary">Bem-vindo à Fios Tecnologia</h2>
               <p className="text-muted-foreground">
-                Selecione uma categoria no menu lateral e clique no botão + para iniciar uma nova conversa.
+                {userTeam
+                  ? `Você faz parte do time ${CATEGORY_NAMES[userTeam]}. Clique no botão + para iniciar uma conversa.`
+                  : 'Carregando seu perfil...'}
               </p>
             </div>
           </div>
