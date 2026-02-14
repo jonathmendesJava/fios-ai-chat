@@ -2,9 +2,10 @@ export type ChatCategory = 'suporte-tecnico' | 'financeiro' | 'comercial' | 'inf
 
 export interface Message {
   id: string;
+  chat_id: string;
   content: string;
   role: 'user' | 'assistant';
-  timestamp: Date;
+  created_at: string;
 }
 
 export interface Chat {
@@ -12,8 +13,8 @@ export interface Chat {
   category: ChatCategory;
   title: string;
   messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CategoryConfig {
