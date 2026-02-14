@@ -6,7 +6,9 @@ import { useChatStore } from '@/hooks/useChatStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import type { ChatCategory } from '@/types/chat';
-import { WEBHOOK_CONFIGS, CATEGORY_NAMES } from '@/config/webhooks';
+import { CATEGORY_NAMES } from '@/config/webhooks';
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const Index = () => {
   const { chats, activeChat, loading, userTeam, setActiveChat, createChat, addMessage, getActiveChat, deleteChat, renameChat } = useChatStore();
@@ -33,22 +35,24 @@ const Index = () => {
       const category = currentChat?.category;
       if (!category) throw new Error('Categoria não encontrada');
 
-      const webhookConfig = WEBHOOK_CONFIGS[category];
-      let response: string;
+      // Build conversation history for context
+      const conversationMessages = currentChat.messages.map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
 
-      if (!webhookConfig.enabled) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        response = `🚧 O atendimento de ${CATEGORY_NAMES[category]} está em desenvolvimento. Em breve você poderá conversar com nossa IA especializada. Por enquanto, utilize o chat Financeiro. Obrigado pela compreensão!`;
-      } else {
-        const res = await fetch(webhookConfig.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chatId: activeChat, message, category }),
-        });
-        if (!res.ok) throw new Error('Falha na comunicação com o servidor');
-        const data = await res.json();
-        response = data.response;
-      }
+      const res = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: conversationMessages, category }),
+      });
+
+      if (!res.ok) throw new Error('Falha na comunicação com o servidor');
+      const data = await res.json();
+      const response = data.response;
 
       await addMessage(activeChat, response, 'assistant');
     } catch (error) {
